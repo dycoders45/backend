@@ -5,7 +5,177 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dycoders | TikDown</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/CSS/style.css">
+    <style>
+ body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #16213e;
+        }
+        .header h1 {
+            font-size: 2em;
+            color: hsl(0, 72.2%, 50.6%);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .header h1 span {
+            color: white;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .card {
+            background-color: #0f3460;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+        .input-group input {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        .input-group button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff4d4d;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        .input-group button:hover {
+            background-color: #ff3333;
+        }
+        .download-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background-color: #ff4d4d;
+            color: #ffffff;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .download-btn:hover {
+            background-color: #ff3333;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        #loading-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #loading-modal .modal-content {
+            background-color: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            color: #ffffff;
+            font-size: 1.2em;
+        }
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+        }
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+
+       
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+            .card {
+                padding: 15px;
+            }
+            .input-group input {
+                font-size: 0.9em;
+            }
+            .input-group button {
+                font-size: 0.9em;
+            }
+            .toast {
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header h1 {
+                font-size: 1.2em;
+            }
+            .input-group input {
+                padding: 8px;
+                font-size: 0.8em;
+            }
+            .input-group button {
+                padding: 8px;
+                font-size: 0.8em;
+            }
+        }
+        
+    </style>
 </head>
 <body>
     <div class="header">
@@ -58,6 +228,71 @@
 
     <div id="toast" class="toast">Failed to retrieve video. Please try again.</div>
 
-    <script src="/js/javascript.js"></script>
+    <script>
+function downloadVideo() {
+    const urlInput = document.getElementById('url-input').value;
+    if (!urlInput) {
+        showToast('Please enter a TikTok URL');
+        return;
+    }
+
+    const loadingModal = document.getElementById('loading-modal');
+    loadingModal.style.display = 'flex';
+
+    fetch(`/api/download?url=${encodeURIComponent(urlInput)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 200) {
+                const videoUrl = data.result.video;
+                const musicUrl = data.result.music;
+                const avatarUrl = data.result.author.avatar; 
+                const nickname = data.result.author.nickname; 
+                const caption = data.result.desc; 
+                const likeCount = data.result.statistics.likeCount; 
+                const commentCount = data.result.statistics.commentCount; 
+                const shareCount = data.result.statistics.shareCount; 
+
+                const resultContainer = document.getElementById('result-container');
+                resultContainer.innerHTML = `
+                    <div class="card">
+                        <img class="avatar" src="${avatarUrl}" alt="Avatar">
+                        <p><strong>${nickname}</strong></p>
+                        <p>${caption}</p>
+                        <p>Likes: ${likeCount}, Comments: ${commentCount}, Shares: ${shareCount}</p>
+                    </div>
+                `;
+
+                const downloadVideoLink = document.getElementById('download-video');
+                const downloadMusicLink = document.getElementById('download-music');
+                downloadVideoLink.href = videoUrl;
+                downloadMusicLink.href = musicUrl; 
+
+                document.getElementById('download-links').style.display = 'block';
+                downloadVideoLink.style.display = 'inline-block';
+                downloadMusicLink.style.display = 'inline-block';
+            } else {
+                showToast('Failed to retrieve video. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to retrieve data');
+        })
+        .finally(() => {
+            loadingModal.style.display = 'none';
+        });
+}
+
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast show';
+    setTimeout(() => {
+        toast.className = toast.className.replace('show', '');
+    }, 3000);
+}
+
+        
+    </script>
 </body>
 </html>
