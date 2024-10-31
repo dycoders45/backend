@@ -1,7 +1,6 @@
 const express = require('express');
-const fetch = require('node-fetch'); // Pastikan ter-install dengan npm install node-fetch@2
+const fetch = require('node-fetch');
 const path = require('path');
-
 const app = express();
 
 // Serve static files dari folder public
@@ -23,5 +22,6 @@ app.get('/api/download', async (req, res) => {
     }
 });
 
-// Export default handler untuk Vercel
-module.exports = app;
+// Menjalankan server di port yang ditentukan oleh Vercel
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
